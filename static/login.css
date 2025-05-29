@@ -92,7 +92,7 @@ input {
     display: flex;
     justify-content: center;
     align-items: center;
-    background:url('background.png');  /* fallback for old browsers */
+    background:url('/static/images/background.png');  /* fallback for old browsers */
     background-size: cover;
     position:relative;
 }

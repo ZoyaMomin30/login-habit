@@ -17,21 +17,19 @@
             
         <div class="form-container sign-up-container">
 
-
-            
             <form action="{{ url_for('register') }}" method="POST">
                 <h1>Create Account</h1>
                 {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    {% for message in messages %}
-                    <p class="flash-message" >{{ message }}</p>  
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <p class="flash-message" >{{ message }}</p>  
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
                 <input type="text" name='name' placeholder="Name" />
                 <input type="email" name='email' placeholder="Email" />
                 <input type="password" name='password' placeholder="Password" />
-                <input type="habit" name='habit' placeholder="Habit Name" />
+                <input type="text" name='habit' placeholder="Habit Name" />
                 <button type="submit" class="btn-grad" >Sign Up</button>
             </form>
         </div>
@@ -83,4 +81,3 @@
     <script type="text/javascript" src="/static/login.js"></script>
 </body>
 </html>
-

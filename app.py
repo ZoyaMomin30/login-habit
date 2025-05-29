@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
+import json
+import random
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'averyverysecretkey'
@@ -43,7 +45,10 @@ with app.app_context():
 
 @app.route('/')
 def home():
-    return render_template("index.html", logged_in=current_user.is_authenticated)
+    with open('quotes.json') as f:
+        quotes = json.load(f)
+    random_quote = random.choice(quotes)
+    return render_template("login.html", logged_in=current_user.is_authenticated, quote=random_quote)
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
@@ -56,7 +61,7 @@ def register():
         user=result.scalar()
         if user:
             flash("user with this email already exists.")
-            return redirect(url_for('login'))
+            return redirect(url_for('home'))
         
 
         # Hashing and salting the password entered by the user 
@@ -80,12 +85,17 @@ def register():
         print("User found:", user)
         print("All users:", User.query.all())
 
-        return redirect(url_for('page'))
+        return redirect(url_for('index'))
     
-    return render_template('page.html', logged_in=current_user.is_authenticated)
+    return render_template('index.html', logged_in=current_user.is_authenticated)
     
 @app.route('/login', methods=["GET","POST"])
 def login():
+
+    with open('quotes.json') as f:
+        quotes = json.load(f)
+    random_quote = random.choice(quotes)
+
     if request.method=="POST":
         email= request.form['email']
         password= request.form['password']
@@ -105,17 +115,17 @@ def login():
         #login is sucessful
         else:
             login_user(user)
-            return redirect(url_for("page"))
+            return redirect(url_for("login"))
 
-    return render_template("index.html", logged_in=current_user.is_authenticated)
+    return render_template("index.html", logged_in=current_user.is_authenticated, quote=random_quote)
 
 
-@app.route('/page')
+@app.route('/index')
 @login_required
 def page():
     print(current_user.name)
     print(current_user.habit)
-    return render_template('page.html', logged_in=True)
+    return render_template('index.html', logged_in=True)
 
 
 if __name__ == "__main__":
