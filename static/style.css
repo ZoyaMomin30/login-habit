@@ -20,6 +20,7 @@ body {
     margin-top: 1em;
     font-family: 'SF Mono', 'Courier New', monospace;
     font-weight: 600;
+    min-height: 100vh;
 }
 
 .center{
@@ -27,8 +28,10 @@ body {
     flex-direction: column;
     align-items:center;
     justify-content:flex-start;
+    flex: 1;
     font-weight: 900;
     font-family: 'SF Mono', 'Courier New', monospace;
+    height:100%;
 
 } 
 
@@ -176,9 +179,6 @@ label {
 
 
 
-
-
-
 .habit-form, .pixel-form {
     max-width: 400px;
     margin: 2rem auto;
@@ -302,4 +302,11 @@ label {
     left: 20px;
     top: 10px;
     font-family: 'Times New Roman', serif;
+}
+
+#logoutbtn{
+    margin:100px;
+    margin-bottom: 0%;
+    padding-bottom: 0%;
+    bottom: 0%;
 }

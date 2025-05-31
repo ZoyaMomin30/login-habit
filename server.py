@@ -6,19 +6,13 @@ from dotenv import load_dotenv
 import json
 import random
 
-# Load environment variables
 load_dotenv()
 
 # app = Flask(__name__)
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
-# Pixela configuration
 token = os.getenv('token')
-# this username needs to be changed. needs to be unique for all users
-# username = os.getenv('username')
 pixela_endpoint = os.getenv('pixela_endpoint')
-# graph_id = "graph3"
-
 
 @app.route('/')
 def home():
@@ -32,7 +26,7 @@ def home():
 # STEP1: CREATE ACCOUNT ON PIXELA and CREATE GRAPH
 
 def create_pixela_user_and_graph(email,habit):
-        username = f"graph{email.replace('@', 'a').replace('.', 'b')}"
+        username = f"graph{email.replace('@', 'b').replace('.', 'a')}"
 
         user_params = {
         "token": token,
@@ -73,35 +67,11 @@ def create_pixela_user_and_graph(email,habit):
         else:
             return False, None, None
 
-# @app.route("/submit", methods=["POST"])
-# def submit():
-#     if request.method=="POST":
-#         quantity = request.form["quantity"]
-#         graph_id = "graph1"
-#         user_email=current_user.email
-#         username = f"graph{user_email.replace('@', 'a').replace('.', 'b')}"
-
-#         post_endpoint = f"{pixela_endpoint}/{username}/graphs/{graph_id}"
-
-#         headers = {"X-USER-TOKEN": token}
-#         today = datetime.now()
-
-#         color_param = {
-#             "date": today.strftime("%Y%m%d"),
-#             "quantity": quantity,
-#         }
-#         pixel_color_response = requests.post(url=post_endpoint, json=color_param, headers=headers)
-
-#         if pixel_color_response.status_code==200:
-#             return redirect('/')
-#         else:
-#             return f"Error: {pixel_color_response.text}", pixel_color_response.status_code
-
 @app.route('/reset')
 def reset():
     """Clear session (for testing)"""
     session.clear()
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

@@ -38,7 +38,6 @@ def load_user(user_id):
 
 # CREATE TABLE IN DB
 
-
 class User(UserMixin, db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(String(100), unique=True)
@@ -49,7 +48,6 @@ class User(UserMixin, db.Model):
 
 with app.app_context():
     db.create_all()
-
 
 @app.route('/')
 def home():
@@ -138,7 +136,7 @@ def login():
         #login is sucessful
         else:
             login_user(user)
-            username = f"graph{user.email.replace('@', 'a').replace('.', 'b')}"
+            username = f"graph{user.email.replace('@', 'b').replace('.', 'a')}"
             habit = user.habit
             return render_template("index.html", logged_in=True, quote=random_quote, username=username, habit=habit, graph_id="graph1")
 
@@ -146,7 +144,7 @@ def login():
 
 
 def create_pixela_user_and_graph(email,habit):
-        username = f"graph{email.replace('@', 'a').replace('.', 'b')}"
+        username = f"graph{email.replace('@', 'b').replace('.', 'a')}"
 
         user_params = {
         "token": token,
@@ -195,8 +193,7 @@ def submit():
 
         graph_id = "graph1"
         user_email = current_user.email
-        username = f"graph{user_email.replace('@', 'a').replace('.', 'b')}"
-        # username = f"graph{user_email.replace('@', 'a').replace('.', 'b')}"
+        username = f"graph{user_email.replace('@', 'b').replace('.', 'a')}"
 
         post_endpoint = f"{pixela_endpoint}/{username}/graphs/{graph_id}"
 
@@ -227,11 +224,15 @@ def index():
     with open('quotes.json') as f:
         quotes = json.load(f)
     random_quote = random.choice(quotes)
-    username = f"graph{current_user.email.replace('@', 'a').replace('.', 'b')}"
+    username = f"graph{current_user.email.replace('@', 'b').replace('.', 'a')}"
     habit = current_user.habit
     # user_graph_id = f"graph_{current_user.id}"
-    return render_template('index.html', logged_in=True, quote=random_quote, username=username, habit=habit, graph_id="graph1")
+    return render_template('index.html', logged_in=current_user.is_authenticated, quote=random_quote, username=username, habit=habit, graph_id="graph1")
 
+@app.route('/reset',methods=["POST"])
+def reset():
+    """Clear session (for testing)"""
+    return redirect(url_for('login'))
 
 if __name__ == "__main__":
     app.run(debug=True)
