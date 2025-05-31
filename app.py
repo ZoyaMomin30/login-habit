@@ -6,7 +6,6 @@ from sqlalchemy import Integer, String
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 import json
 import random
-from server import create_pixela_user_and_graph
 import requests
 from datetime import datetime
 from dotenv import load_dotenv
@@ -232,6 +231,8 @@ def index():
 @app.route('/reset',methods=["POST"])
 def reset():
     """Clear session (for testing)"""
+    current_user.is_authenticated == False
+
     return redirect(url_for('login'))
 
 if __name__ == "__main__":
