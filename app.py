@@ -6,6 +6,11 @@ from sqlalchemy import Integer, String
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 import json
 import random
+from server import create_pixela_user_and_graph
+import requests
+from datetime import datetime
+from dotenv import load_dotenv
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'averyverysecretkey'
@@ -14,6 +19,9 @@ app.config['SECRET_KEY'] = 'averyverysecretkey'
 class Base(DeclarativeBase):
     pass
 
+load_dotenv()
+token = os.getenv('token')
+pixela_endpoint = os.getenv('pixela_endpoint')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 db = SQLAlchemy(model_class=Base)
@@ -45,16 +53,21 @@ with app.app_context():
 
 @app.route('/')
 def home():
-    with open('quotes.json') as f:
-        quotes = json.load(f)
-    random_quote = random.choice(quotes)
-    return render_template("login.html", logged_in=current_user.is_authenticated, quote=random_quote)
+    # with open('quotes.json') as f:
+    #     quotes = json.load(f)
+    # random_quote = random.choice(quotes)
+    return render_template("login.html", logged_in=current_user.is_authenticated)
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
     if request.method=="POST":
+        with open('quotes.json') as f:
+            quotes = json.load(f)
+        random_quote = random.choice(quotes)
+
         email= request.form['email']
         password= request.form['password']
+        habit=request.form['habit']
 
         # Find user by email entered.
         result= db.session.execute(db.select(User).where(User.email == email))
@@ -85,9 +98,18 @@ def register():
         print("User found:", user)
         print("All users:", User.query.all())
 
-        return redirect(url_for('index'))
+        # Create Pixela user and graph
+        success, username, graph_id = create_pixela_user_and_graph(email, habit)
+        if success:
+            print("graph made ")
+            return render_template("index.html", username=username, habit=habit, graph_id=graph_id, quote=random_quote)
+        else:
+            flash("User registered but graph creation failed.")
+            return redirect(url_for('home'))
+
+        # return redirect(url_for('login'))
     
-    return render_template('index.html', logged_in=current_user.is_authenticated)
+    return render_template('login.html')
     
 @app.route('/login', methods=["GET","POST"])
 def login():
@@ -100,10 +122,11 @@ def login():
         email= request.form['email']
         password= request.form['password']
 
+
         # Find user by email entered.
         result= db.session.execute(db.select(User).where(User.email == email))
         user=result.scalar()
-
+        
         #email doesnt exist
         if not user:
             flash ("Email doest exist. please try again")
@@ -115,17 +138,99 @@ def login():
         #login is sucessful
         else:
             login_user(user)
-            return redirect(url_for("login"))
+            username = f"graph{user.email.replace('@', 'a').replace('.', 'b')}"
+            habit = user.habit
+            return render_template("index.html", logged_in=True, quote=random_quote, username=username, habit=habit, graph_id="graph1")
 
-    return render_template("index.html", logged_in=current_user.is_authenticated, quote=random_quote)
+    return render_template("login.html")
 
+
+def create_pixela_user_and_graph(email,habit):
+        username = f"graph{email.replace('@', 'a').replace('.', 'b')}"
+
+        user_params = {
+        "token": token,
+        "username": username,
+        "agreeTermsOfService": "yes",
+        "notMinor": "yes",
+        }
+
+        create_account_response = requests.post(url="https://pixe.la/v1/users", json=user_params)
+        print(create_account_response.text)
+
+        # STEP2: CREATE GRAPH
+        graph_id = "graph1"
+        graph_config = {
+            "id": graph_id,
+            "name": habit,
+            "unit": "times",
+            "type": "int",
+            "color": "kuro",
+            "timezone": "Asia/Kolkata",
+            "isSecret": False,
+            "publishOptionalData": False
+        }
+
+        graph_endpoint = f"https://pixe.la/v1/users/{username}/graphs"
+
+        headers = {
+            "X-USER-TOKEN": token
+        }
+        graph_response = requests.post(graph_endpoint, json=graph_config, headers=headers)
+
+
+        print("USER RESPONSE:", create_account_response.text)
+        print("GRAPH RESPONSE:", graph_response.text)
+
+        if graph_response.status_code == 200:
+            return True, username, graph_id
+        else:
+            return False, None, None
+        
+        
+@app.route("/submit", methods=["POST"])
+def submit():
+    if request.method=="POST":
+        quantity = request.form["quantity"]
+
+        graph_id = "graph1"
+        user_email = current_user.email
+        username = f"graph{user_email.replace('@', 'a').replace('.', 'b')}"
+        # username = f"graph{user_email.replace('@', 'a').replace('.', 'b')}"
+
+        post_endpoint = f"{pixela_endpoint}/{username}/graphs/{graph_id}"
+
+        headers = {
+            "X-USER-TOKEN": token
+        }
+        today = datetime.now()
+
+        color_param = {
+            "date": today.strftime("%Y%m%d"),
+            "quantity": quantity,
+        }
+        pixel_color_response = requests.post(url=post_endpoint, json=color_param, headers=headers)
+
+        if pixel_color_response.status_code == 200:
+            flash("Habit updated successfully.")
+            return redirect(url_for('index'))
+        else:
+            flash(f"Error submitting habit: {pixel_color_response.text}")
+            return redirect(url_for('index'))
+        
 
 @app.route('/index')
 @login_required
-def page():
+def index():
     print(current_user.name)
     print(current_user.habit)
-    return render_template('index.html', logged_in=True)
+    with open('quotes.json') as f:
+        quotes = json.load(f)
+    random_quote = random.choice(quotes)
+    username = f"graph{current_user.email.replace('@', 'a').replace('.', 'b')}"
+    habit = current_user.habit
+    # user_graph_id = f"graph_{current_user.id}"
+    return render_template('index.html', logged_in=True, quote=random_quote, username=username, habit=habit, graph_id="graph1")
 
 
 if __name__ == "__main__":

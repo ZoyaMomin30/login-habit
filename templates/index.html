@@ -42,29 +42,28 @@
             </div>
             {% endif %}
 
-            {% if graph_id %}
+
             <iframe src="https://pixe.la/v1/users/{{ username }}/graphs/{{ graph_id }}" 
-                    width="800" height="400" frameborder="0">
+                width="800" height="400" frameborder="0">
             </iframe>
-<!-- 
-            <iframe src="https://pixe.la/v1/users/zoya1/graphs/graph3" 
+
+            <p>{{ habit }}</p>
+
+            <!-- <iframe src="https://pixe.la/v1/users/zoya1/graphs/graph3" 
             width="800" height="400" frameborder="0"> -->
 
             <form action="/submit" method="POST">
                 <input type="hidden" name="graph_id" value="{{ graph_id }}">
-                <label for="description">Description:</label>
-                <input type="text" name="description" id="description">
 
                 <label for="quantity">Quantity:</label>
-                <input type="number" name="quantity" id="quantity">
+                <input type="number" name="quantity" min="0" id="quantity">
 
                 <button type="submit" class="btn btn-primary">Submit</button>
             </form>
-            {% else %}
-            <div class="alert alert-warning" role="alert">
-                No habit graph found. Please register to create your habit tracker.
-            </div>
-            {% endif %}
+
+            
+
+            <button type="button" class="btn btn-secondary">Log out</button>
 
         </div>
 
