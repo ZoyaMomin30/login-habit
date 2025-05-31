@@ -11,14 +11,14 @@ from dotenv import load_dotenv
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'averyverysecretkey'
+app.config['SECRET_KEY'] = os.getenv('secret_key')
 
 load_dotenv()
 token = os.getenv('token')
 pixela_endpoint = os.getenv('pixela_endpoint')
 
 db = SQLAlchemy()
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:1234@localhost:5432/User'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
 
 db.init_app(app)
 
