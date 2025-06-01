@@ -18,7 +18,7 @@ token = os.getenv('token')
 pixela_endpoint = os.getenv('pixela_endpoint')
 
 db = SQLAlchemy()
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('external_database_url')
 
 db.init_app(app)
 
