@@ -9,6 +9,7 @@ import requests
 from datetime import datetime
 from dotenv import load_dotenv
 import os
+import re 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('secret_key')
@@ -46,10 +47,23 @@ with app.app_context():
 
 @app.route('/')
 def home():
-    # with open('quotes.json') as f:
-    #     quotes = json.load(f)
-    # random_quote = random.choice(quotes)
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     return render_template("login.html", logged_in=current_user.is_authenticated)
+
+def generate_pixela_username(email):
+    # Lowercase and replace invalid email characters
+    username = email.lower().replace('@', 'b').replace('.', 'a')
+
+    # Remove anything that's not a-z, 0-9, or -
+    username = re.sub(r'[^a-z0-9-]', '', username)
+
+    # Ensure it starts with a letter
+    if not username[0].isalpha():
+        username = 'a' + username
+
+    # Limit length to 33 characters (Pixela limit)
+    return username[:33]
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
@@ -122,7 +136,7 @@ def login():
         
         #email doesnt exist
         if not user:
-            flash ("Email doest exist. please try again")
+            flash ("Email does not exist. please try again")
             return redirect(url_for("home"))
         #password is wrong
         elif not check_password_hash(user.password, password):
@@ -131,7 +145,7 @@ def login():
         #login is sucessful
         else:
             login_user(user)
-            username = f"graph{user.email.replace('@', 'b').replace('.', 'a')}"
+            username = generate_pixela_username(email)
             habit = user.habit
             return render_template("index.html", logged_in=True, quote=random_quote, username=username, habit=habit, graph_id="graph1")
 
@@ -139,7 +153,7 @@ def login():
 
 
 def create_pixela_user_and_graph(email,habit):
-        username = f"graph{email.replace('@', 'b').replace('.', 'a')}"
+        username = generate_pixela_username(email)
 
         user_params = {
         "token": token,
@@ -185,10 +199,11 @@ def create_pixela_user_and_graph(email,habit):
 def submit():
     if request.method=="POST":
         quantity = request.form["quantity"]
+        email = request.form["email"]
 
         graph_id = "graph1"
         user_email = current_user.email
-        username = f"graph{user_email.replace('@', 'b').replace('.', 'a')}"
+        username = generate_pixela_username(email)
 
         post_endpoint = f"{pixela_endpoint}/{username}/graphs/{graph_id}"
 
@@ -216,10 +231,11 @@ def submit():
 def index():
     print(current_user.name)
     print(current_user.habit)
+    email = request.form["email"]
     with open('quotes.json') as f:
         quotes = json.load(f)
     random_quote = random.choice(quotes)
-    username = f"graph{current_user.email.replace('@', 'b').replace('.', 'a')}"
+    username = generate_pixela_username(email)
     habit = current_user.habit
     # user_graph_id = f"graph_{current_user.id}"
     return render_template('index.html', logged_in=current_user.is_authenticated, quote=random_quote, username=username, habit=habit, graph_id="graph1")
@@ -228,7 +244,6 @@ def index():
 def reset():
     """Clear session (for testing)"""
     current_user.is_authenticated == False
-
     return redirect(url_for('login'))
 
 if __name__ == "__main__":
