@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, url_for, redirect, flash, sen
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from flask_sqlalchemy import SQLAlchemy
 import json
 import random
 import requests
@@ -11,15 +10,17 @@ from dotenv import load_dotenv
 import os
 import re 
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('secret_key')
-
 load_dotenv()
+
+app = Flask(__name__)
+
+app.config['SECRET_KEY'] = os.getenv('secret_key')
 token = os.getenv('token')
 pixela_endpoint = os.getenv('pixela_endpoint')
+# base_url=os.getenv('BASE_URL')
 
 db = SQLAlchemy()
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('external_database_url')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
 
 db.init_app(app)
 
@@ -40,6 +41,8 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(100))
     name = db.Column(db.String(1000))
     habit = db.Column(db.String(1000))
+    pixela_username = db.Column(db.String(100))  # ✅ store it
+    graph_id = db.Column(db.String(100))         # ✅ store it
 
 
 with app.app_context():
@@ -50,6 +53,7 @@ def home():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     return render_template("login.html", logged_in=current_user.is_authenticated)
+
 
 def generate_pixela_username(email):
     # Lowercase and replace invalid email characters
@@ -83,21 +87,30 @@ def register():
             flash("user with this email already exists.")
             return redirect(url_for('home'))
         
-
+        success, username, graph_id = create_pixela_user_and_graph(email, habit)
+        if not success:
+            flash("User registered but graph creation failed.")
+            return redirect(url_for('home'))
+        
         # Hashing and salting the password entered by the user 
         hashed_and_salted_pw=generate_password_hash(
-            request.form['password'],
+            # request.form['password'],
+            password,
             method='pbkdf2:sha256',
             salt_length=8
         )
 
         # Storing the hashed password in our database
+
         new_User = User (
             name=request.form['name'],
             email=request.form['email'],
             password=hashed_and_salted_pw,
-            habit=request.form['habit']
+            habit=request.form['habit'],
+            pixela_username=username,   # ✅ add this
+            graph_id=graph_id           # ✅ and this
         )
+
         db.session.add(new_User)
         db.session.commit()
 
@@ -106,13 +119,7 @@ def register():
         print("All users:", User.query.all())
 
         # Create Pixela user and graph
-        success, username, graph_id = create_pixela_user_and_graph(email, habit)
-        if success:
-            print("graph made ")
-            return render_template("index.html", username=username, habit=habit, graph_id=graph_id, quote=random_quote)
-        else:
-            flash("User registered but graph creation failed.")
-            return redirect(url_for('home'))
+        return render_template("index.html", username=username, habit=habit, graph_id=graph_id, quote=random_quote)
 
         # return redirect(url_for('login'))
     
@@ -145,15 +152,17 @@ def login():
         #login is sucessful
         else:
             login_user(user)
-            username = generate_pixela_username(email)
+            username = user.pixela_username  # ✅
+            graph_id = current_user.graph_id
             habit = user.habit
-            return render_template("index.html", logged_in=True, quote=random_quote, username=username, habit=habit, graph_id="graph1")
+            return render_template("index.html", logged_in=True, quote=random_quote, username=username, habit=habit, graph_id=graph_id)
 
     return render_template("login.html")
 
 
 def create_pixela_user_and_graph(email,habit):
         username = generate_pixela_username(email)
+        graph_id = generate_graph_id(email)
 
         user_params = {
         "token": token,
@@ -166,7 +175,6 @@ def create_pixela_user_and_graph(email,habit):
         print(create_account_response.text)
 
         # STEP2: CREATE GRAPH
-        graph_id = "graph1"
         graph_config = {
             "id": graph_id,
             "name": habit,
@@ -189,21 +197,32 @@ def create_pixela_user_and_graph(email,habit):
         print("USER RESPONSE:", create_account_response.text)
         print("GRAPH RESPONSE:", graph_response.text)
 
-        if graph_response.status_code == 200:
+        if graph_response.status_code == 200 or "already exists" in graph_response.text.lower():
             return True, username, graph_id
         else:
             return False, None, None
         
+
+def generate_graph_id(email):
+    # Take only alphanumeric lowercase characters from the email
+    base = re.sub(r'[^a-z0-9]', '', email.lower())
+
+    # Ensure it starts with a letter
+    if not base[0].isalpha():
+        base = 'g' + base
+
+    return base[:17]  # max 17 characters
         
+
 @app.route("/submit", methods=["POST"])
+@login_required
 def submit():
     if request.method=="POST":
         quantity = request.form["quantity"]
-        email = request.form["email"]
 
-        graph_id = "graph1"
+        graph_id = current_user.graph_id
         user_email = current_user.email
-        username = generate_pixela_username(email)
+        username = generate_pixela_username(user_email)
 
         post_endpoint = f"{pixela_endpoint}/{username}/graphs/{graph_id}"
 
@@ -231,19 +250,22 @@ def submit():
 def index():
     print(current_user.name)
     print(current_user.habit)
-    email = request.form["email"]
+
     with open('quotes.json') as f:
         quotes = json.load(f)
     random_quote = random.choice(quotes)
-    username = generate_pixela_username(email)
+
+    username = current_user.pixela_username
     habit = current_user.habit
+    graph_id = current_user.graph_id
+
     # user_graph_id = f"graph_{current_user.id}"
-    return render_template('index.html', logged_in=current_user.is_authenticated, quote=random_quote, username=username, habit=habit, graph_id="graph1")
+    return render_template('index.html', logged_in=current_user.is_authenticated, quote=random_quote, username=username, habit=habit, graph_id= graph_id)
 
 @app.route('/reset',methods=["POST"])
 def reset():
     """Clear session (for testing)"""
-    current_user.is_authenticated == False
+    logout_user()
     return redirect(url_for('login'))
 
 if __name__ == "__main__":
