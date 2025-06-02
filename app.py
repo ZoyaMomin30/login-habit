@@ -221,10 +221,6 @@ def generate_graph_id(email):
 @app.route("/submit", methods=["POST"])
 def submit():
     if request.method=="POST":
-
-        print(current_user.name)
-        print(current_user.habit)
-        print(current_user.graph_id)
         quantity = request.form["quantity"]
         user_email = current_user.email
 
@@ -256,8 +252,6 @@ def submit():
 @app.route('/index')
 @login_required
 def index():
-    print(current_user.name)
-    print(current_user.habit)
 
     with open('quotes.json') as f:
         quotes = json.load(f)
