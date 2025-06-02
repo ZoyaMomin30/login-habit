@@ -17,10 +17,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('secret_key')
 token = os.getenv('token')
 pixela_endpoint = os.getenv('pixela_endpoint')
-# base_url=os.getenv('BASE_URL')
+base_url=os.getenv('BASE_URL')
 
 db = SQLAlchemy()
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('external_database_url')
 
 db.init_app(app)
 
@@ -215,10 +215,14 @@ def generate_graph_id(email):
         
 
 @app.route("/submit", methods=["POST"])
-@login_required
 def submit():
     if request.method=="POST":
+
+        print(current_user.name)
+        print(current_user.habit)
+        print(current_user.graph_id)
         quantity = request.form["quantity"]
+        user_email = current_user.email
 
         graph_id = current_user.graph_id
         user_email = current_user.email
