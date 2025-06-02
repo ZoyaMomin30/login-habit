@@ -204,14 +204,18 @@ def create_pixela_user_and_graph(email,habit):
         
 
 def generate_graph_id(email):
-    # Take only alphanumeric lowercase characters from the email
-    base = re.sub(r'[^a-z0-9]', '', email.lower())
+    # Lowercase the email and replace invalid characters with hyphens
+    base = re.sub(r'[^a-z0-9-]', '-', email.lower())
 
-    # Ensure it starts with a letter
-    if not base[0].isalpha():
+    # Remove leading characters until we get a letter
+    base = re.sub(r'^[^a-z]+', '', base)
+
+    # Ensure the final string starts with a letter
+    if not base or not base[0].isalpha():
         base = 'g' + base
 
-    return base[:17]  # max 17 characters
+    # Truncate to maximum allowed length
+    return base[:17]
         
 
 @app.route("/submit", methods=["POST"])
