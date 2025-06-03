@@ -207,61 +207,20 @@ def create_pixela_user_and_graph(email,habit):
         else:
             return False, None, None
         
-def generate_graph_id(email):
-    # Lowercase the email and replace invalid characters with hyphens
-    base = re.sub(r'[^a-z0-9-]', '-', email.lower())
-
-    # Remove leading characters until we get a letter
-    base = re.sub(r'^[^a-z]+', '', base)
-
-    # Ensure the final string starts with a letter
-    if not base or not base[0].isalpha():
-        base = 'g' + base
-
-    # Truncate to maximum allowed length
-    return base[:17]
-
 # def generate_graph_id(email):
-#     # Take only alphanumeric lowercase characters from the email
-#     base = re.sub(r'[^a-z0-9]', '', email.lower())
+#     # Lowercase the email and replace invalid characters with hyphens
+#     base = re.sub(r'[^a-z0-9-]', '-', email.lower())
 
-#     # Ensure it starts with a letter
-#     if not base[0].isalpha():
+#     # Remove leading characters until we get a letter
+#     base = re.sub(r'^[^a-z]+', '', base)
+
+#     # Ensure the final string starts with a letter
+#     if not base or not base[0].isalpha():
 #         base = 'g' + base
 
-#     return base[:17]  # max 17 characters
+#     # Truncate to maximum allowed length
+#     return base[:17]
 
-# def generate_graph_id(email):
-#     temp = generate_pixela_username(email)
-#     graph_id = 'g'+ temp
-
-#     return graph_id[:17]
-
-# def generate_graph_id(email):
-#     """Generate a valid graph ID from email"""
-#     # Create a hash of the email for uniqueness
-#     email_hash = hashlib.md5(email.encode()).hexdigest()[:8]
-    
-#     # Create base from email
-#     base = email.split('@')[0].lower()
-#     base = re.sub(r'[^a-z0-9]', '', base)  # Remove invalid chars (no hyphens)
-    
-#     # Ensure it starts with a letter
-#     if not base or not base[0].isalpha():
-#         base = 'graph'
-    
-#     # Combine base with hash, ensuring total length is 2-17 chars
-#     graph_id = base + email_hash
-    
-#     # Truncate to max 17 characters
-#     if len(graph_id) > 17:
-#         graph_id = base[:9] + email_hash[:8]  # Ensure we keep some of both
-    
-#     # Ensure minimum length of 2
-#     if len(graph_id) < 2:
-#         graph_id = 'g' + email_hash[:15]
-    
-#     return graph_id
         
 @app.route("/submit", methods=["POST"])
 def submit():
