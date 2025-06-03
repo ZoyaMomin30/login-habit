@@ -167,7 +167,7 @@ def login():
 def create_pixela_user_and_graph(email,habit):
         username = generate_pixela_username(email)
         # graph_id = generate_graph_id(email)
-        graph_id="graph1"
+        graph_id="graph12"
 
         user_params = {
         "token": token,
