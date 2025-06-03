@@ -9,6 +9,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 import re 
+import hashlib
 
 load_dotenv()
 
@@ -18,6 +19,7 @@ app.config['SECRET_KEY'] = os.getenv('secret_key')
 token = os.getenv('token')
 pixela_endpoint = os.getenv('pixela_endpoint')
 base_url=os.getenv('BASE_URL')
+graph_id="graph12"
 
 db = SQLAlchemy()
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('external_database_url')
@@ -89,7 +91,7 @@ def register():
         
         success, username, graph_id = create_pixela_user_and_graph(email, habit)
         if not success:
-            flash("User registered but graph creation failed.")
+            flash("graph creation failed.")
             return redirect(url_for('home'))
         
         # Hashing and salting the password entered by the user 
@@ -113,6 +115,8 @@ def register():
 
         db.session.add(new_User)
         db.session.commit()
+
+        login_user(new_User)
 
         print("Email:", email)
         print("User found:", user)
@@ -162,7 +166,8 @@ def login():
 
 def create_pixela_user_and_graph(email,habit):
         username = generate_pixela_username(email)
-        graph_id = generate_graph_id(email)
+        # graph_id = generate_graph_id(email)
+        graph_id="graph1"
 
         user_params = {
         "token": token,
@@ -203,6 +208,7 @@ def create_pixela_user_and_graph(email,habit):
             return False, None, None
         
 
+<<<<<<< HEAD
 def generate_graph_id(email):
     # Lowercase the email and replace invalid characters with hyphens
     base = re.sub(r'[^a-z0-9-]', '-', email.lower())
@@ -216,6 +222,49 @@ def generate_graph_id(email):
 
     # Truncate to maximum allowed length
     return base[:17]
+=======
+# def generate_graph_id(email):
+#     # Take only alphanumeric lowercase characters from the email
+#     base = re.sub(r'[^a-z0-9]', '', email.lower())
+
+#     # Ensure it starts with a letter
+#     if not base[0].isalpha():
+#         base = 'g' + base
+
+#     return base[:17]  # max 17 characters
+
+# def generate_graph_id(email):
+#     temp = generate_pixela_username(email)
+#     graph_id = 'g'+ temp
+
+#     return graph_id[:17]
+
+# def generate_graph_id(email):
+#     """Generate a valid graph ID from email"""
+#     # Create a hash of the email for uniqueness
+#     email_hash = hashlib.md5(email.encode()).hexdigest()[:8]
+    
+#     # Create base from email
+#     base = email.split('@')[0].lower()
+#     base = re.sub(r'[^a-z0-9]', '', base)  # Remove invalid chars (no hyphens)
+    
+#     # Ensure it starts with a letter
+#     if not base or not base[0].isalpha():
+#         base = 'graph'
+    
+#     # Combine base with hash, ensuring total length is 2-17 chars
+#     graph_id = base + email_hash
+    
+#     # Truncate to max 17 characters
+#     if len(graph_id) > 17:
+#         graph_id = base[:9] + email_hash[:8]  # Ensure we keep some of both
+    
+#     # Ensure minimum length of 2
+#     if len(graph_id) < 2:
+#         graph_id = 'g' + email_hash[:15]
+    
+#     return graph_id
+>>>>>>> b2dfba1 (added favicon)
         
 
 @app.route("/submit", methods=["POST"])
