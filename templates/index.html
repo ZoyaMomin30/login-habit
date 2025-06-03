@@ -13,13 +13,6 @@
     <div class="container">
         <div class="left">
 
-            <!-- <iframe 
-                src="https://widgetbox.app/embed/clock/digital/9659d62d-ae0e-497d-9c06-f787fd578d30" 
-                width="270" 
-                height="300" 
-                frameborder="0" 
-                scrolling="no">
-            </iframe> -->
             <img class="image" src="{{ url_for('static', filename='images/image7.png') }}" alt="logo" height="300px" >
 
             <img class="image" src="{{ url_for('static', filename='images/image1.png') }}" alt="logo" height="250px" >
@@ -30,6 +23,8 @@
 
         <div class="center">
             <h1 id="title">Habit Tracker</h1>
+
+            <h2>Welcome {{ current_user.name }}</h2>
 
                 <div class="quote-container">
                     <p>"{{ quote.q }}"</p>
@@ -44,13 +39,9 @@
 
             <h2>{{ habit }}</h2>
 
-
             <iframe src="https://pixe.la/v1/users/{{ username }}/graphs/{{ graph_id }}" 
                 width="800" height="400" frameborder="0">
             </iframe>
-
-            <!-- <iframe src="https://pixe.la/v1/users/zoya1/graphs/graph3" 
-            width="800" height="400" frameborder="0"> -->
 
             <form action="/submit" method="POST">
                 <input type="hidden" name="graph_id" value="{{ graph_id }}">
