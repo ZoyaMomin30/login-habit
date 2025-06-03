@@ -207,8 +207,6 @@ def create_pixela_user_and_graph(email,habit):
         else:
             return False, None, None
         
-
-<<<<<<< HEAD
 def generate_graph_id(email):
     # Lowercase the email and replace invalid characters with hyphens
     base = re.sub(r'[^a-z0-9-]', '-', email.lower())
@@ -222,7 +220,7 @@ def generate_graph_id(email):
 
     # Truncate to maximum allowed length
     return base[:17]
-=======
+
 # def generate_graph_id(email):
 #     # Take only alphanumeric lowercase characters from the email
 #     base = re.sub(r'[^a-z0-9]', '', email.lower())
@@ -264,9 +262,7 @@ def generate_graph_id(email):
 #         graph_id = 'g' + email_hash[:15]
     
 #     return graph_id
->>>>>>> b2dfba1 (added favicon)
         
-
 @app.route("/submit", methods=["POST"])
 def submit():
     if request.method=="POST":
